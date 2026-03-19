@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 
-const generatetoken=(id)=>{
-     return jwt.sign({id},process.env.jwt_scecret,{
-        expiresIn:'30d'
-     })
-}
+const generatetoken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+};
 
 export default generatetoken;

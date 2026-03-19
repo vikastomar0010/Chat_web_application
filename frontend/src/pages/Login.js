@@ -2,6 +2,7 @@ import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, V
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config';
 
 function Login() {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ function Login() {
             const config = {
                 headers: { "Content-type": "application/json" }
             };
-            const { data } = await axios.post("http://localhost:5000/api/v1/users/login", { email, password }, config);
+            const { data } = await axios.post(`${API_BASE_URL}/api/v1/users/login`, { email, password }, config);
             localStorage.setItem('userInfo', JSON.stringify(data));
             setLoading(false);
             navigate('/chats');
@@ -80,7 +81,7 @@ function Login() {
 
             {/* btn */}
             <Button colorScheme='blue' width="100%" style={{ marginTop: 15 }} onClick={submithandler} isLoading={loading}>
-                Sign Up
+                Log in
             </Button>
             <Button onClick={useTempAcc}>Use Guest</Button>
         </VStack>

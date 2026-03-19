@@ -2,6 +2,7 @@ import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, V
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config';
 function SignUp() {
     const [name,setName]=useState('')
     const [email,setemail]=useState('')
@@ -25,7 +26,7 @@ function SignUp() {
                   })
                 return;
             }
-            if(pics.type==='image/png'||'image/jpeg'){
+            if(pics.type==='image/png'||pics.type==='image/jpeg'){
                 const data=new FormData()
                 data.append('file',pics)
                 data.append('upload_preset','chat-mern')
@@ -83,7 +84,7 @@ function SignUp() {
              }
             //  remember to have this name,pic,email,password same name as in the Users.controller.js as we were getting
             //internal server error 500 when we were passing Name where as we were destructuring as name
-             const {data}=await axios.post("http://localhost:5000/api/v1/users",{name,pic,email,password},config)
+             const {data}=await axios.post(`${API_BASE_URL}/api/v1/users`,{name,pic,email,password},config)
              
              toast({
                 title: 'User Created Successfully',

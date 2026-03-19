@@ -17,6 +17,7 @@ import {useDisclosure,Modal,
 import { Chatstate } from '../Context/Context'
 import axios from 'axios'
 import UserListItem from './UserListItem'
+import { API_BASE_URL } from '../config';
 function UpdateGroupModal({fetchAgain,setfetch,fetchmessage}) {
     const {user,selectedChat, setSelectedChat}=Chatstate()
     const toast=useToast()
@@ -39,7 +40,7 @@ function UpdateGroupModal({fetchAgain,setfetch,fetchmessage}) {
             },
           };
           const { data } = await axios.get(
-            `http://localhost:5000/api/v1/users?search=${search}`,
+            `${API_BASE_URL}/api/v1/users?search=${search}`,
             config
           );
           setsearchResult(data);
@@ -66,7 +67,7 @@ function UpdateGroupModal({fetchAgain,setfetch,fetchmessage}) {
                 },
                }
 
-               const {data}=await axios.put("http://localhost:5000/api/v1/chat/rename",{groupId:selectedChat._id,newName:chatName},config)
+               const {data}=await axios.put(`${API_BASE_URL}/api/v1/chat/rename`,{groupId:selectedChat._id,newName:chatName},config)
                console.log("Rename Success")
                setSelectedChat(data)
                setfetch(!fetchAgain)
@@ -113,7 +114,7 @@ function UpdateGroupModal({fetchAgain,setfetch,fetchmessage}) {
               Authorization:`Bearer ${user.token}`
             }
            }
-           const {data}= await axios.put("http://localhost:5000/api/v1/chat/groupadd",{groupId:selectedChat._id,userId:user1._id},config)
+           const {data}= await axios.put(`${API_BASE_URL}/api/v1/chat/groupadd`,{groupId:selectedChat._id,userId:user1._id},config)
            console.log("Memeber added Successfully")
            setSelectedChat(data)
             setfetch(!fetchAgain)
@@ -150,7 +151,7 @@ function UpdateGroupModal({fetchAgain,setfetch,fetchmessage}) {
            Authorization:`Bearer ${user.token}`
          }
         }
-        const {data}= await axios.put("http://localhost:5000/api/v1/chat/removeFgroup",{groupId:selectedChat._id,userId:user2._id},config)
+       const {data}= await axios.put(`${API_BASE_URL}/api/v1/chat/removeFgroup`,{groupId:selectedChat._id,userId:user2._id},config)
          console.log("Memeber Removed Successfully")
         setSelectedChat(data)
         fetchmessage()

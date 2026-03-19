@@ -5,6 +5,7 @@ import axios from "axios";
 import { AddIcon } from "@chakra-ui/icons";
 import { getSender } from "../components/Somelogic";
 import Groupchatmodal from "../components/Groupchatmodal";
+import { API_BASE_URL } from "../config";
 
 function Mychats({fetchAgain}) {
   const [loggeduser, setloggeduser] = useState();
@@ -15,12 +16,12 @@ function Mychats({fetchAgain}) {
       const config = {
         headers: {
           "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+          Authorization: user?.token ? `Bearer ${user.token}` : "",
         },
       };
 
       const { data } = await axios.get(
-        "http://localhost:5000/api/v1/chat",
+        `${API_BASE_URL}/api/v1/chat`,
         config
       );
 
@@ -64,14 +65,7 @@ function Mychats({fetchAgain}) {
         alignItems="center"
       >
         My Chats
-        <Groupchatmodal>
-        <Button
-          display="flex"
-          fontSize={{ base: "17px", md: "10px", lg: "17px" }}
-          rightIcon={<AddIcon />}
-        >
-          New Group Chat
-        </Button></Groupchatmodal>
+        <Groupchatmodal />
       </Box>
 
       <Box

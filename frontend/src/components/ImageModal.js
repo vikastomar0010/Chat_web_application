@@ -50,15 +50,14 @@ function ImageModal({ docfn, children }) {
 // }
 
 // now doing real part 
-const docpass=()=>{
-    const formData= new FormData()
-    formData.append('avatar',avatar)
-    formData.append('chat',selectedChat?._id)
-    docfn(formData)
-    onClose()
-    setavatar(null)
-    setdisplayimg(null)
-}
+const docpass = () => {
+  if (!avatar) return;
+
+  docfn(avatar);   
+  onClose();
+  setavatar(null);
+  setdisplayimg(null);
+};
 // displaying the selected image 
 const imagehandler=(e)=>{
   setavatar(e.target.files[0])

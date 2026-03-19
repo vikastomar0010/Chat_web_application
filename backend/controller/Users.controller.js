@@ -1,72 +1,90 @@
 import UsersModel from "../model/Users.js";
 import generatetoken from "../db/generatetoken.js";
-const createUser=async(req,res)=>{
-     try{
-      const {email,name,password,pic} =req.body
-      const UserExits=await UsersModel.findOne({email})
-      if(UserExits){
-       return res.status(200).json(UserExits)
-      }
-    //   just adding one extra of the jwt
-      const  NewUser=await UsersModel.create({
-            email,name,password,pic
-        })
-                   
-    //   return res.status(200).json(NewUser) instead to avoid the complecation of adding the jwt to exisitng one we will send each stuff separately
-    return res.status(201).json({
-        _id:NewUser._id,
-        name:NewUser.name,
-        email:NewUser.email,
-        pic:NewUser.pic,
-        token:generatetoken(NewUser._id)
-    })
-     }catch(err){
-        res.status(500).json({msg:err.message})
-     }
-}
 
+// ✅ REGISTER USER
+const createUser = async (req, res) => {
+  try {
+    const { email, name, password, pic } = req.body;
 
-// authehntication of the user that is the fuckin login part
+    const userExists = await UsersModel.findOne({ email });
 
-const authUser=async(req,res)=>{
-    try{
-        const {email,password}=req.body
-        const User=await UsersModel.findOne({email})
-        if(!User){
-          return res.status(200).json({msg:'Invalid username or password'})
-        }
-        else if(User&& (await User.matchpassword(password))){
-         res.status(200).json({
-             _id:User._id,
-             name:User.name,
-            email:User.email,
-             pic:User.pic,
-             token:generatetoken(User._id)
-            })
-        }
-        else if(await User.matchpassword(password)===false){
-            return res.status(500).json({msg:'Incorrect Password'})
-        }
-    }catch(err){
-      return  res.status(500).json({msg:err.message})
+    if (userExists) {
+      return res.status(400).json({ msg: "User already exists" });
     }
-       
-}
 
-// for searching the users
+    const newUser = await UsersModel.create({
+      email,
+      name,
+      password,
+      pic,
+    });
 
-const userSearch=async(req,res)=>{
-    try{
-        const keyword=req.query.search?{
-           $or:[{name:{$regex:req.query.search,$options:'i'} },
-           {email:{$regex:req.query.search,$options:'i'} }
-          ]
-        }:{}
-         const Allusers=await UsersModel.find(keyword).find({_id:{$ne:req.user._id}})
-         res.status(200).json(Allusers)
-    }catch(err){
-      res.status(200).json({msg:"Error Occured"})
-    } 
-}
+    res.status(201).json({
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      pic: newUser.pic,
+      token: generatetoken(newUser._id),
+    });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
 
-export  {createUser,authUser,userSearch}
+// ✅ LOGIN USER
+const authUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await UsersModel.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ msg: "Invalid email or password" });
+    }
+
+    const isMatch = await user.matchpassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({ msg: "Invalid email or password" });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+      token: generatetoken(user._id),
+    });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+// ✅ SEARCH USER
+const userSearch = async (req, res) => {
+  try {
+    const search = req.query.search;
+
+    // ✅ prevent empty or undefined search
+    if (!search || !search.trim()) {
+      return res.status(200).json([]);
+    }
+
+    const keyword = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const users = await UsersModel.find(keyword).find({
+      _id: { $ne: req.user._id },
+    });
+
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+export { createUser, authUser, userSearch };
