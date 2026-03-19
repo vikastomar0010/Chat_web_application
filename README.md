@@ -1,6 +1,16 @@
 # 💬 MERN Real-Time Chat Application
 
-A **production-ready real-time chat application** built using the MERN stack with modern features like image sharing, typing indicators, message status (✓✓), and online presence.
+- A full-stack, production-grade real-time chat application built using the MERN stack (MongoDB, Express.js, React.js, Node.js) with Socket.io enabling low-latency, bidirectional communication between clients and server.
+
+- The system supports one-to-one and group conversations with real-time synchronization of messages, ensuring instant delivery without page reloads. Implemented advanced messaging capabilities including image sharing using Multer for file handling and Cloudinary for scalable cloud storage.
+
+- Engineered a complete message lifecycle tracking system with states such as **sent, delivered, and seen**, mimicking modern messaging platforms like WhatsApp. Designed efficient socket event handling to avoid duplication, ensure proper event cleanup, and maintain consistent UI updates across multiple clients.
+
+- Integrated real-time typing indicators and dynamic online/offline user presence using socket-based user tracking. Built secure authentication using JWT, protecting API routes and maintaining user sessions.
+
+- Developed modular RESTful APIs for chats, users, and messages with optimized database queries using Mongoose. Applied React Context API for global state management and Chakra UI for building a responsive and user-friendly interface.
+
+- The application is designed with scalability and performance in mind, handling concurrent users efficiently while maintaining real-time responsiveness and smooth user experience.
 
 ---
 
