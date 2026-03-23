@@ -17,6 +17,7 @@ import {
   DrawerBody,
   Input,
   useToast,
+  Flex
 } from "@chakra-ui/react";
 import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import React, { useState } from "react";
@@ -33,9 +34,8 @@ import { API_BASE_URL } from "../config";
 function Sidedrawer() {
   const btnref = React.useRef();
 
-  // ✅ FIXED STATES
   const [result, setresult] = useState([]);
-  const [search, setsearch] = useState(""); 
+  const [search, setsearch] = useState("");
   const [loading, setloading] = useState(false);
   const [chatloading, setchatloading] = useState(false);
 
@@ -56,22 +56,13 @@ function Sidedrawer() {
 
   // 🔹 SEARCH USER
   const SearchUser = async () => {
-    if (!search || !search.trim()) {
-      toast({
-        title: "Please enter something to search",
-        status: "warning",
-        duration: 2000,
-        isClosable: true,
-      });
-      return;
-    }
+    if (!search || !search.trim()) return;
 
     try {
       setloading(true);
 
       const config = {
         headers: {
-          "Content-type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
       };
@@ -84,8 +75,7 @@ function Sidedrawer() {
       setresult(data);
     } catch (err) {
       toast({
-        title: "Error Occurred",
-        description: err.response?.data?.msg || "Search failed",
+        title: "Search failed",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -102,7 +92,6 @@ function Sidedrawer() {
 
       const config = {
         headers: {
-          "Content-type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
       };
@@ -121,8 +110,7 @@ function Sidedrawer() {
       onClose();
     } catch (err) {
       toast({
-        title: "Error Occurred",
-        description: err.response?.data?.msg || "Failed to create chat",
+        title: "Chat error",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -134,73 +122,80 @@ function Sidedrawer() {
 
   return (
     <>
-      {/* 🔹 TOP BAR */}
+      {/* 🔥 WHATSAPP TOP BAR */}
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        bg="#2a2438"
+        bg="#202c33"
         w="100%"
-        p="5px 10px"
-        borderRadius="lg"
+        px={3}
+        py={2}
+        borderBottom="1px solid #2a3942"
       >
-        <Tooltip label="Search the Users" hasArrow placement="bottom-end">
-          <Button variant="ghost" ref={btnref} onClick={onOpen}>
-            <FontAwesomeIcon color="white" icon={faMagnifyingGlass} />
-            <Text px="4" color="white" display={{ base: "none", md: "flex" }}>
-              Search User
-            </Text>
-          </Button>
-        </Tooltip>
+        <Flex justify="space-between" align="center">
 
-        <Text fontSize="2xl" fontFamily="Work sans">
-          GB Chat
-        </Text>
+          {/* 🔍 SEARCH ICON ONLY */}
+          <Tooltip label="Search users" hasArrow>
+            <Button
+              variant="ghost"
+              onClick={onOpen}
+              _hover={{ bg: "#2a3942" }}
+            >
+              <FontAwesomeIcon color="white" icon={faMagnifyingGlass} />
+            </Button>
+          </Tooltip>
 
-        <div style={{ display: "flex" }}>
-          <Menu>
-            <MenuButton>
-              <BellIcon w={7} h={7} />
-            </MenuButton>
-          </Menu>
+          {/* TITLE */}
+          <Text color="white" fontSize="lg" fontWeight="bold">
+            Chat App
+          </Text>
 
-          <Menu>
-            <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-              <Avatar size="sm" name={user.name} src={user.pic} />
-            </MenuButton>
+          {/* RIGHT SIDE */}
+          <Flex align="center" gap={2}>
+            <BellIcon w={5} h={5} color="white" />
 
-            <MenuList bg="#2a2438">
-              <ProfileModal user={user}>
-                <MenuItem bg="#2a2438">My Profile</MenuItem>
-              </ProfileModal>
+            <Menu>
+              <MenuButton>
+                <Avatar size="sm" name={user.name} src={user.pic} />
+              </MenuButton>
 
-              <MenuDivider />
-              <MenuItem onClick={LogOut} bg="#2a2438">
-                LogOut
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </div>
+              <MenuList bg="#202c33" color="white">
+                <ProfileModal user={user}>
+                  <MenuItem bg="#202c33">My Profile</MenuItem>
+                </ProfileModal>
+
+                <MenuDivider />
+
+                <MenuItem onClick={LogOut} bg="#202c33">
+                  Logout
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </Flex>
+
+        </Flex>
       </Box>
 
-      {/* 🔹 DRAWER */}
-      <Drawer placement="left" onClose={onClose} isOpen={isOpen} finalFocusRef={btnref}>
+      {/* 🔍 SEARCH DRAWER */}
+      <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay />
-        <DrawerContent>
-          <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
+        <DrawerContent bg="#111b21" color="white">
+          <DrawerHeader borderBottomWidth="1px">
+            Search Users
+          </DrawerHeader>
 
           <DrawerBody>
-            <Box display="flex" pb={2}>
+            <Flex pb={2}>
               <Input
-                placeholder="Search by name or email"
-                mr={2}
-                value={search || ""} 
+                placeholder="Search users"
+                bg="#202c33"
+                border="none"
+                value={search}
                 onChange={(e) => setsearch(e.target.value)}
               />
-              <Button onClick={SearchUser}>Go</Button>
-            </Box>
+              <Button ml={2} onClick={SearchUser}>
+                Go
+              </Button>
+            </Flex>
 
-            {/* 🔹 RESULTS */}
             {loading ? (
               <ChatLoading />
             ) : (

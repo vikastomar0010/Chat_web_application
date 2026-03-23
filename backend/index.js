@@ -8,11 +8,15 @@ import routerm from './routes/message.routes.js';
 import routeru from './routes/user.routes.js';
 import connectDB from './db/connect.js';
 import MessageModel from "./model/Messages.js";
+import UsersModel from "./model/Users.js"; // ✅ ADDED
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+// ✅ ONLINE USERS MAP
+const onlineUsers = new Map();
 
 const PORT = Number(process.env.PORT) || 5000;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
@@ -35,9 +39,21 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-  // ✅ SETUP USER SOCKET
-  socket.on('setup', (userData) => {
-    socket.join(userData._id); // personal room
+  // ✅ SETUP USER SOCKET + ONLINE STATUS
+  socket.on('setup', async (userData) => {
+    socket.join(userData._id);
+
+    // 🔥 ADD TO ONLINE USERS
+    onlineUsers.set(userData._id.toString(), socket.id);
+
+    // 🔥 UPDATE DB
+    await UsersModel.findByIdAndUpdate(userData._id, {
+      isOnline: true,
+    });
+
+    // 🔥 NOTIFY OTHERS
+    socket.broadcast.emit("user online", userData._id);
+
     socket.emit("connected");
   });
 
@@ -57,14 +73,13 @@ io.on('connection', (socket) => {
     if (!chat.users) return;
 
     chat.users.forEach((user) => {
-      // skip sender
       if (user._id === newmessageReceive.sender._id) return;
 
       socket.to(user._id).emit("message recieved", newmessageReceive);
     });
   });
 
-  // ✅ DELIVERED (FIXED CORRECTLY)
+  // ✅ MESSAGE DELIVERED
   socket.on("message delivered", async (messageId) => {
     try {
       const msg = await MessageModel.findByIdAndUpdate(
@@ -75,7 +90,6 @@ io.on('connection', (socket) => {
 
       if (!msg || !msg.chat?.users) return;
 
-      // send only to chat users
       msg.chat.users.forEach((user) => {
         socket.to(user._id.toString()).emit("message delivered", messageId);
       });
@@ -85,7 +99,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ SEEN (FINAL FIX)
+  // ✅ SEEN
   socket.on("mark seen", async (chatId) => {
     try {
       await MessageModel.updateMany(
@@ -93,7 +107,6 @@ io.on('connection', (socket) => {
         { status: "seen" }
       );
 
-      // send to everyone in this chat room EXCEPT sender
       socket.to(chatId).emit("messages seen", chatId);
 
     } catch (err) {
@@ -101,8 +114,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
+  // ✅ DISCONNECT + LAST SEEN
+  socket.on("disconnect", async () => {
     console.log("user disconnected");
+
+    let userId;
+
+    // 🔍 FIND USER FROM MAP
+    for (let [key, value] of onlineUsers.entries()) {
+      if (value === socket.id) {
+        userId = key;
+        onlineUsers.delete(key);
+        break;
+      }
+    }
+
+    if (userId) {
+      // 🔥 UPDATE DB
+      await UsersModel.findByIdAndUpdate(userId, {
+        isOnline: false,
+        lastSeen: new Date(),
+      });
+
+      // 🔥 NOTIFY OTHERS
+      socket.broadcast.emit("user offline", userId);
+    }
   });
 });
 

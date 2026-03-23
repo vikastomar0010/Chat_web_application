@@ -1,23 +1,20 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const ChatContext = createContext();
 
 const ChatProvider = ({ children }) => {
   const [selectedChat, setSelectedChat] = useState();
   const [user, setUser] = useState();
-  const [notification, setNotification] = useState([]);
-  const [chats, setChats] = useState([]);
 
-  
+  // ✅ FIXED NAME
+  const [notifications, setNotifications] = useState([]);
+
+  const [chats, setChats] = useState([]);
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     setUser(userInfo);
-     
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
 
   return (
     <ChatContext.Provider
@@ -26,8 +23,8 @@ const ChatProvider = ({ children }) => {
         setSelectedChat,
         user,
         setUser,
-        notification,
-        setNotification,
+        notifications,
+        setNotifications,
         chats,
         setChats,
       }}

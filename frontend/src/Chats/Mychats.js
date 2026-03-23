@@ -1,21 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { Chatstate } from "../Context/Context";
-import { Box, Button, Stack, useToast, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Stack,
+  useToast,
+  Text,
+  Avatar,
+  Flex,
+  Input
+} from "@chakra-ui/react";
 import axios from "axios";
-import { AddIcon } from "@chakra-ui/icons";
-import { getSender } from "../components/Somelogic";
+import { getSenderfull } from "../components/Somelogic";
 import Groupchatmodal from "../components/Groupchatmodal";
 import { API_BASE_URL } from "../config";
 
-function Mychats({fetchAgain}) {
+function Mychats({ fetchAgain }) {
   const [loggeduser, setloggeduser] = useState();
-  const { selectedChat, setSelectedChat, chats, setChats, user } = Chatstate();
+  const [search, setSearch] = useState("");
+
+  // ✅ ADD notifications
+  const {
+    selectedChat,
+    setSelectedChat,
+    chats,
+    setChats,
+    user,
+    notifications,
+    setNotifications
+  } = Chatstate();
+
   const toast = useToast();
+
   const fetchData = async () => {
     try {
       const config = {
         headers: {
-          "Content-type": "application/json",
           Authorization: user?.token ? `Bearer ${user.token}` : "",
         },
       };
@@ -28,80 +47,149 @@ function Mychats({fetchAgain}) {
       setChats(data);
     } catch (err) {
       toast({
-        title: "Error Occurred",
-        description: err.message, // use err.message to get the error message
-        status: "error", // use 'error' instead of 'success' for error status
+        title: "Error",
+        description: err.message,
+        status: "error",
         duration: 5000,
         isClosable: true,
       });
     }
   };
+
   useEffect(() => {
     setloggeduser(JSON.parse(localStorage.getItem("userInfo")));
     fetchData();
-   
-    // eslint-disable-next-line
-  }, [fetchAgain]); // Include dependencies in the dependency array
+  }, [fetchAgain]);
+
+  // 🔍 FILTER CHAT
+  const filteredChats = chats?.filter((chat) => {
+    const name = !chat.isGroupchat
+      ? getSenderfull(loggeduser, chat.users)?.name
+      : chat.chatName;
+
+    return name?.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
-    <Box
-      display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
-      flexDir="column"
-      alignItems="center"
-      p={3}
-      bg="#2a2438"
-      w={{ base: "100%", md: "31%" }}
-      borderRadius="lg"
-     
-    >
-      <Box
-        pb={3}
-        px={3}
-        fontSize={{ base: "28px", md: "30px" }}
-        fontFamily="Works sans"
-        display="flex"
-        w="100%"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        My Chats
+    <Box display="flex" flexDir="column" bg="#111b21" h="100%" overflow="hidden">
+
+      {/* HEADER */}
+      <Flex justify="space-between" align="center" p={3} bg="#202c33">
+        <Text color="white" fontSize="xl" fontWeight="bold">
+          Chats
+        </Text>
         <Groupchatmodal />
+      </Flex>
+
+      {/* SEARCH */}
+      <Box p={2}>
+        <Flex align="center" bg="#202c33" borderRadius="full" px={3}>
+          <Text color="gray.400" mr={2}>🔍</Text>
+          <Input
+            placeholder="Search or start new chat"
+            variant="unstyled"
+            color="white"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </Flex>
       </Box>
 
-      <Box
-        display="flex"
-        flexDir="column"
-        p={3}
-        bg="black"
-        w="100%"
-        h="100%"
-        borderRadius="lg"
-        overflow="hidden"
-      >
-        {chats ? (
-          <Stack overflowY="scroll">
-            {chats.map((e) => (
-              <Box
-                onClick={() =>{ setSelectedChat(e);console.log(selectedChat)}}
-                cursor="pointer"
-                bg={selectedChat === e ? "#38B2AC" : "#4c4a4f"}
-                color={selectedChat === e ? "white" : "white "}
-                px={3}
-                py={3}
-                borderRadius="lg"
-                key={e._id}
-              >
-                <Text>
-                  {!e.isGroupchat ? getSender(loggeduser, e.users) : e.chatName}
-                </Text>
-             { e?.latestMessage?.content &&  <Text fontFamily="Work sans">'{e?.latestMessage?.content}'</Text>}
+      {/* CHAT LIST */}
+      <Stack overflowY="auto" spacing={0}>
+        {filteredChats?.map((chat) => {
+
+          const otherUser = !chat.isGroupchat
+            ? getSenderfull(loggeduser, chat.users)
+            : null;
+
+          // ✅ COUNT UNREAD FROM NOTIFICATIONS
+          const unreadCount = notifications?.filter(
+            (n) => n.chat._id === chat._id
+          ).length;
+
+          return (
+            <Flex
+              key={chat._id}
+              onClick={() => {
+                setSelectedChat(chat);
+
+                // ✅ CLEAR NOTIFICATIONS FOR THIS CHAT
+                setNotifications(prev =>
+                  prev.filter(n => n.chat._id !== chat._id)
+                );
+              }}
+              align="center"
+              p={3}
+              cursor="pointer"
+              bg={selectedChat === chat ? "#2a3942" : "transparent"}
+              _hover={{ bg: "#2a3942" }}
+              borderBottom="1px solid #1f2c33"
+            >
+
+              {/* AVATAR */}
+              <Box position="relative" mr={3}>
+                <Avatar
+                  size="md"
+                  name={chat.isGroupchat ? chat.chatName : otherUser?.name}
+                  src={otherUser?.profilePic}
+                />
+
+                {!chat.isGroupchat && otherUser?.isOnline && (
+                  <Box
+                    position="absolute"
+                    bottom="2px"
+                    right="2px"
+                    w="10px"
+                    h="10px"
+                    bg="green.400"
+                    borderRadius="full"
+                    border="2px solid #111b21"
+                  />
+                )}
               </Box>
-            ))}
-          </Stack>
-        ) : (
-          <h2>Loading</h2>
-        )}
-      </Box>
+
+              {/* TEXT */}
+              <Box flex="1">
+                <Flex justify="space-between">
+                  <Text color="white" fontWeight="500">
+                    {!chat.isGroupchat ? otherUser?.name : chat.chatName}
+                  </Text>
+
+                  <Text fontSize="xs" color="gray.400">
+                    {chat.latestMessage?.createdAt
+                      ? new Date(chat.latestMessage.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </Text>
+                </Flex>
+
+                <Flex justify="space-between" align="center">
+                  <Text fontSize="sm" color="gray.400" noOfLines={1}>
+                    {chat.latestMessage?.content || "No messages yet"}
+                  </Text>
+
+                  {/* ✅ REAL UNREAD BADGE */}
+                  {unreadCount > 0 && (
+                    <Box
+                      bg="#25D366"
+                      color="black"
+                      fontSize="xs"
+                      px={2}
+                      borderRadius="full"
+                    >
+                      {unreadCount}
+                    </Box>
+                  )}
+                </Flex>
+              </Box>
+
+            </Flex>
+          );
+        })}
+      </Stack>
     </Box>
   );
 }

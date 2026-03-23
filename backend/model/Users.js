@@ -11,6 +11,18 @@ const UserSchema = mongoose.Schema(
       default:
         "https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg",
     },
+
+    // ✅ ONLINE STATUS (ADDED)
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ✅ LAST SEEN (ADDED)
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,
